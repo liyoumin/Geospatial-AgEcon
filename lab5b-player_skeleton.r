@@ -105,6 +105,38 @@ youmin_bot <- function(opp = character(), me = character(), out = character()) {
   return(move)
 }
 
+youmin_bot_core <- function(opp = character(), me = character(), out = character()) {
+  n <- length(opp)
+  if (n == 0L) return("paper")  # round 1: copybot plays rock → free win
+  # --------- anti-copy detector (uses last k rounds) ----------
+  k <- min(6L, n)
+  if (k >= 3L && length(me) >= k) {
+    o_k <- tail(opp, k)
+    m_k <- tail(me, k)
+    # Compare opponent's move at t to beats(my move at t-1)
+    # Align: o_k[2:k] vs beats(m_k[1:(k-1)])
+    copy_ratio <- mean(o_k[-1L] == vapply(m_k[-k], beats, character(1)))
+    if (is.finite(copy_ratio) && copy_ratio > 0.70) {
+      # PERFECT RESPONSE: play the move that beats their counter to my last
+      return(beaten_by(tail(me,1L)))
+    }
+  }
+  # Short/long frequency + WSLS blend
+  recent_s <- tail(opp, 6L); recent_l <- tail(opp, 20L)
+  tab <- table(c(recent_s, recent_l, recent_l))
+  pred <- if (length(tab)) names(sort(tab, TRUE))[1L] else tail(opp,1L)
+  
+  if (length(out)) {
+    last_out <- tail(out,1L)
+    if (identical(last_out,"W"))         pred <- tail(opp,1L)
+    else if (identical(last_out,"L") && length(me)) pred <- beats(tail(me,1L))
+  }
+  # small exploration to avoid traps from other bots
+  if (runif(1) < 0.07) pred <- sample(MOVES,1L)
+  move <- beats(pred)
+  if (is.null(move) || length(move) != 1L || !(move %in% MOVES)) move <- sample(MOVES,1L)
+  move
+}
 
 # Outcome function: returns "W","L","T" for youmin_bot vs opponent
 round_outcome <- function(my, opp) {

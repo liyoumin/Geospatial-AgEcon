@@ -1,0 +1,29 @@
+NetCDF SPEI  ----> Make NetCDF Raster Layer ----> Select Apr-Sep rasters ----> Cell Statistics (Mean)
+                                                                                     |
+2022 CDL  ----> Alfalfa mask (CDL==36) ---------------------------------------------| 
+                                                                                     v
+                                                           Project Raster to CDL grid
+                                                                                     |
+                                                                                     v
+                                                              SetNull / Extract alfalfa
+                                                                                     |
+                                                                                     v
+                                                                  Alfalfa SPEI raster
+                                                                                     |
+State polygons --------------------------------------------------------------------> Zonal Statistics as Table
+                                                                                     |
+                                                                                     v
+                                                                          State-year SPEI table
+
+
+
+
+Annual alfalfa SPEI raster
+        +
+State boundary polygons
+        ↓
+Zonal Statistics as Table
+        ↓
+State-year table
+        ↓
+Export Table to CSV

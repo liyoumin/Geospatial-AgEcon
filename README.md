@@ -1,2 +1,2 @@
 # Geospatial-AgEcon
-GIS and R
+ArcGIS, Arcpy and R

@@ -144,3 +144,56 @@ for year in range(2022):
             arcpy.management.Delete(tmp)
 
 print("Done.")
+
+### panel data creat
+import pandas as pd
+import os
+import glob
+
+workdir = r"C:\Users\liyoumin\Desktop\Alfalfa-SPEI\alf_spei_05_25_aprset"
+
+# state FIPS -> postal abbreviation
+fips_to_stusps = {
+    "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT","10":"DE",
+    "11":"DC","12":"FL","13":"GA","15":"HI","16":"ID","17":"IL","18":"IN","19":"IA",
+    "20":"KS","21":"KY","22":"LA","23":"ME","24":"MD","25":"MA","26":"MI","27":"MN",
+    "28":"MS","29":"MO","30":"MT","31":"NE","32":"NV","33":"NH","34":"NJ","35":"NM",
+    "36":"NY","37":"NC","38":"ND","39":"OH","40":"OK","41":"OR","42":"PA","44":"RI",
+    "45":"SC","46":"SD","47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA",
+    "54":"WV","55":"WI","56":"WY"
+}
+
+all_files = sorted(glob.glob(os.path.join(workdir, "alfal_spei_mean_*.csv")))
+
+dfs = []
+for f in all_files:
+    df = pd.read_csv(f, dtype={"statefp": str})
+    
+    # keep only needed columns
+    df = df[["year", "statefp", "mean_spei"]].copy()
+    
+    # pad statefp with leading zero if needed
+    df["statefp"] = df["statefp"].str.zfill(2)
+    
+    # add postal abbreviation
+    df["stusps"] = df["statefp"].map(fips_to_stusps)
+    
+    # rename mean variable
+    df = df.rename(columns={"mean_spei": "speimean"})
+    
+    # reorder columns
+    df = df[["statefp", "stusps", "year", "speimean"]]
+    
+    dfs.append(df)
+
+panel = pd.concat(dfs, ignore_index=True)
+
+# optional: sort
+panel = panel.sort_values(["statefp", "year"]).reset_index(drop=True)
+
+out_csv = os.path.join(workdir, "alfal_spei_panel_2005_2025.csv")
+panel.to_csv(out_csv, index=False)
+
+print("Saved:", out_csv)
+print(panel.head(20))
+print(panel.shape)

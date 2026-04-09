@@ -2,8 +2,8 @@
 #include <DHT.h>
 #include <ThingSpeak.h>
 
-const char* ssid = "Dana-iPhone";
-const char* password = "123456789";
+const char* ssid = "iPhone Youmin";
+const char* password = "12345678";
 
 WiFiClient  client;
 

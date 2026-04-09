@@ -1,6 +1,6 @@
 #include <WiFi.h>
-const char* ssid = "Youmin-ESP";
-const char* password = "123456789";
+const char* ssid = "Youmin-iphone";
+const char* password = "12345678";
 // Set your Static IP address
 IPAddress local_IP(192, 168, 1, 184);
 // Set your Gateway IP address

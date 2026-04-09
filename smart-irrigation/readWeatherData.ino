@@ -1,7 +1,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 const char* ssid = "iPhone Youmin li";
-const char* password = "123456789";
+const char* password = "12345678";
 // Use your OpenWeatherMap API key here
 String apiKey = "1da5602c98819cc5e77582d0676746f8";
 void setup() {

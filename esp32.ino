@@ -1,7 +1,7 @@
 /*
   ESP32 Dev Module code for Smart Irrigation System
   -------------------------------------------------
-  Matches Mega2560 protocol from your project page.
+  Matches Mega2560 protocol.
 
   Functions:
   - Reads telemetry from Mega2560 over UART

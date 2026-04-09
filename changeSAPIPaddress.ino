@@ -1,7 +1,7 @@
 #include <WiFi.h>
 
-const char* ssid = "dana_sensor_network";
-const char* password = "123456789";
+const char* ssid = "SmartIrrigation_Youmin";
+const char* password = "12345678";
 
 // Set your Static IP address for the Soft Access Point
 IPAddress local_IP(192, 168, 125, 1);  // The common default IP for ESP32 SAP is 192.168.4.1

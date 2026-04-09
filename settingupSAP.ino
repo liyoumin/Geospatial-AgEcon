@@ -1,7 +1,7 @@
 #include <WiFi.h>
 
-const char* ssid = "dana_sensor_network";
-const char* password = "0123456789";
+const char* ssid = "SmartIrrigation_Youmin";
+const char* password = "12345678";
 WiFiServer server(80);
 
 String html = "<!DOCTYPE html> \

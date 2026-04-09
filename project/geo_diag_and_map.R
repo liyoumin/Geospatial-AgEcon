@@ -35,41 +35,48 @@ st_geometry(alf_sf)
 plot(st_geometry(alf_sf))
 alf_spei_pts <- st_centroid(alf_sf)
 alf_spei_pts <- alf_spei_pts %>%
-  filter(!is.na(SPEI))
-
+  filter(!is.na(alf_spei_mean))
 summary(alf_spei_pts$alf_spei_mean)
-v.irr <- variogram(alf_spei_mean ~ 1, data = alf_spei_pts)
-v.exp <- variogram(Export_Value_0 ~ 1, data = alf_spei_pts)
+
+#####
+library(gstat)
+alf_spei_pts2 <- alf_spei_pts[!is.na(alf_spei_pts$Export_Value), ]
+v.exp <- variogram(Export_Value ~ 1, data = alf_spei_pts2)
+summary(alf_spei_pts2$Export_Value)
+table(is.na(alf_spei_pts2$Export_Value))
+###
+v.irr <- variogram(alf_spei_mean ~ 1, data = alf_spei_pts2)
+v.exp <- variogram(Export_Value ~ 1, data = alf_spei_pts2)
 plot(v.irr)
 plot(v.exp)
 
 # Fit variogram model
 mod <- vgm(c("Exp", "Mat", "Gau", "Sph"))
-fit_ols <- fit.variogram(variogram(alf_spei_mean ~ 1, data=alf_spei_pts), model=mod)
+fit_ols <- fit.variogram(variogram(alf_spei_mean ~ 1, data=alf_spei_pts2), model=mod)
 plot(v.irr, pl=T, model=fit_ols, main="OLS Model")
 
 # Try REML fit
 library(gstat)
 library(sf)
-initial_model <- vgm(psill = var(alf_spei_pts$alf_spei_mean, na.rm = TRUE),
+initial_model <- vgm(psill = var(alf_spei_pts2$alf_spei_mean, na.rm = TRUE),
                      model = "Sph", range = 5e5, nugget = 0.1)
 fitted_model <- fit.variogram(v.irr, model = initial_model)
 plot(v.irr, fitted_model)
 
 # Create an object with the function gstat() that contains both the variable and the covariate
-e <- gstat(id="alf_spei_mean", formula=Export_Value_0~1, data=alf_spei_pts)
-e <- gstat(e, id="alf_spei_mean", formula=alf_spei_mean~1, data=alf_spei_pts)
+e <- gstat(id="alf_spei_mean", formula=Export_Value~1, data=alf_spei_pts2)
+e <- gstat(e, id="alf_spei_mean", formula=alf_spei_mean~1, data=alf_spei_pts2)
 # Plot the 2 direct variograms and cross-variogram
 vg <- variogram(e)
 plot(vg)
 # Fit linear model of co-regionalization
-g <- gstat(NULL, id = "alf_spei_mean", formula = alf_spei_mean ~ 1, data = alf_spei_pts)
-g <- gstat(g, id = "Export_Value_0", formula = Export_Value_0 ~ 1, data = alf_spei_pts)
+g <- gstat(NULL, id = "alf_spei_mean", formula = alf_spei_mean ~ 1, data = alf_spei_pts2)
+g <- gstat(g, id = "Export_Value", formula = Export_Value ~ 1, data = alf_spei_pts2)
 # Compute cross-variogram between SPEI and Export_Value
 vg <- variogram(g)
 plot(vg)
 # Estimate covariance between the two variables for psill
-cov_val <- cov(alf_spei_pts$Export_Value_0, alf_spei_pts$alf_spei_mean)
+cov_val <- cov(alf_spei_pts2$Export_Value, alf_spei_pts2$alf_spei_mean)
 # Define the initial spherical model
 model_init <- vgm(psill = cov_val, model = "Sph", range = 5e5, nugget = 0.1)
 # Fit the model
@@ -78,7 +85,7 @@ e_sph <- fit.lmc(vg, g, model = model_init, correct.diagonal = 1.01)
 e_sph
 plot(vg, model = e_sph, 
      main = "Empirical & Fitted Cross-Variogram: SPEI vs Export Value")
-vg_cross <- vg %>% filter(id == "alf_spei_mean.Export_Value_0")
+vg_cross <- vg %>% filter(id == "alf_spei_mean.Export_Value")
 
 plot(vg_cross$dist, vg_cross$gamma,
      type = "b", pch = 19, col = "steelblue",
@@ -92,7 +99,7 @@ as.data.frame(e_sph$model)
 e_gau <- fit.lmc(
   vg, e,
   model = vgm(
-    psill = cov(alf_spei_pts$alf_spei_mean, alf_spei_pts$Export_Value_0, use = "complete.obs"),
+    psill = cov(alf_spei_pts2$alf_spei_mean, alf_spei_pts2$Export_Value, use = "complete.obs"),
     model = "Gau",
     range = 5e5,     # 500 km
     nugget = 0.1
@@ -106,7 +113,7 @@ plot(vg, model = e_gau, main = "Gaussian LMC: SPEI vs Export Value")
 e_mat <- fit.lmc(
   vg, e,
   model = vgm(
-    psill = cov(alf_spei_pts$alf_spei_mean, alf_spei_pts$Export_Value_0, use = "complete.obs"),
+    psill = cov(alf_spei_pts2$alf_spei_mean, alf_spei_pts2$Export_Value, use = "complete.obs"),
     model = "Mat",
     range = 5e5,
     nugget = 0.1
@@ -117,8 +124,8 @@ e_mat <- fit.lmc(
 plot(vg, model = e_mat, main = "Matérn LMC: SPEI vs Export Value")
 
 # Predict# Bounding box for your state polygons
-bbox <- st_bbox(alf_spei_pts)
-alf_spei_sp <- as(alf_spei_pts, "Spatial")
+bbox <- st_bbox(alf_spei_pts2)
+alf_spei_sp <- as(alf_spei_pts2, "Spatial")
 grid_sp <- as(grid_sf, "Spatial")
 proj4string(grid_sp) <- CRS(st_crs(alf_spei_sp)$wkt)
 # Predict SPEI using the co-kriging model

@@ -3,7 +3,7 @@
 const char* ssid = "iPhone Youmin li";
 const char* password = "123456789";
 // Use your OpenWeatherMap API key here
-String apiKey = "1da5602c98819cc5e77582d0676746f8";
+String apiKey = "1da5602c98819cc5e77582d0676746f8***";
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);

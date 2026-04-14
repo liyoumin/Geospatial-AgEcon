@@ -15,7 +15,7 @@ String html = "<!DOCTYPE html> \
 <html> \
 <body> \
 <center><h1>ESP32 Soft access point</h1></center> \
-<center><h2>Web Server Testing: Welcome to the Classroom!</h2></center> \
+<center><h2>Web Server Testing: Works good and can read live data!</h2></center> \
 </body> \
 </html>";
 

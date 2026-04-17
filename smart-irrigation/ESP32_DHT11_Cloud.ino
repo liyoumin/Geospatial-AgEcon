@@ -47,7 +47,7 @@ void getData(){
     Serial.println("Failed to read from DHT sensor.");
     return;
      }
-  Serial.print("Temperature (°C): ");
+  Serial.print("Temperature (C): ");
   Serial.println(temperature);
 }
 

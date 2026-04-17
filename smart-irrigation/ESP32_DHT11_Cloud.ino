@@ -1,14 +1,17 @@
+#define TS_ENABLE_SSL
+
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <DHT.h>
 #include <ThingSpeak.h>
 
-const char* ssid = "iPhone Youmin";
+const char* ssid = "iPhone Youmin li";
 const char* password = "12345678";
 
-WiFiClient  client;
+WiFiClientSecure client;
 
-unsigned long myChannelID = 2504473;
-const char * myWriteAPIKey = "IQNPV4Q99RZDGQGI";
+unsigned long myChannelID = 3347147;
+const char * myWriteAPIKey = "V85NE5L7FEY0ZIUU";
 
 // Timer variables
 unsigned long lastTime = 0;

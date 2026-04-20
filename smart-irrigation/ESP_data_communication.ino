@@ -12,8 +12,8 @@ const char* HOME_WIFI_PASS = "YOUR_HOME_WIFI_PASSWORD";
 // ESP32 OWN WIFI: phone connects to this
 // Phone browser: http://192.168.4.1
 // =====================================================
-const char* AP_SSID = "SmartIrrigation_Youmin";
-const char* AP_PASS = "12345678";
+const char* AP_SSID = "SmartIrrigation_ESP32";
+const char* AP_PASS = "12345678";   // at least 8 characters
 
 IPAddress AP_IP(192, 168, 4, 1);
 IPAddress AP_GATEWAY(192, 168, 4, 1);
@@ -37,8 +37,10 @@ const unsigned long WEATHER_INTERVAL_MS = 60000;
 const unsigned long WIFI_RECONNECT_INTERVAL_MS = 15000;
 
 // =====================================================
-// Mega2560 UART reading Mega Serial.begin(9600), so connect:
-// Mega TX0 pin 1 -> ESP32 GPIO16 RX2
+// Mega2560 UART reading
+// ESP32 pins unchanged:
+// Mega TX -> voltage divider -> ESP32 GPIO16 RX2
+// Mega RX <- ESP32 GPIO17 TX2 optional
 // GND -> GND
 // =====================================================
 #define ESP32_RX_FROM_MEGA 16
@@ -50,11 +52,14 @@ WebServer server(80);
 
 // =====================================================
 // ESP32 water level sensor
-// Connect water level signal to ESP32 GPIO34.
+// Field 3 uses this ESP32 analog pin because current Mega
+// code does not send water-level telemetry.
+// Connect water level signal to GPIO34.
+// Use 3.3V signal only. If sensor outputs 5V, use divider.
 // =====================================================
 const int PIN_WATER_LEVEL = 34;
 
-// Calibrate these after testing Serial Monitor.
+// Calibrate these values after checking Serial Monitor.
 // Empty tank raw ADC
 int WATER_EMPTY_ADC = 0;
 
@@ -62,7 +67,7 @@ int WATER_EMPTY_ADC = 0;
 int WATER_FULL_ADC = 4095;
 
 // =====================================================
-// Live data parsed from your current Mega code
+// Live data parsed from your unchanged Mega code
 // Mega line example:
 // ADC=630,Soil=44.0,T=23.0,RH=45.0,Pump=0,Mode=AUTO,LOW=30.0,HIGH=40.0,Vol=100,RunMS=4000
 // =====================================================
@@ -81,6 +86,14 @@ int irrigationVolumeML = -1;
 unsigned long runMS = 0;
 
 unsigned long lastMegaMs = 0;
+
+// =====================================================
+// Phone page Set Volume frame
+// This preserves your previous web frame.
+// With current Mega code unchanged, this value is stored
+// on ESP32 only. The actual Mega volume still comes from keypad.
+// =====================================================
+int phoneSetVolumeML = 100;
 
 // =====================================================
 // ESP32 water level
@@ -241,7 +254,7 @@ void parseMegaLine(String line) {
   line.trim();
   if (line.length() == 0) return;
 
-  // Ignore keypad messages like: Key=A
+  // Ignore keypad messages such as: Key=A
   if (line.indexOf("ADC=") < 0 || line.indexOf("Soil=") < 0) {
     Serial.print("Ignored Mega line: ");
     Serial.println(line);
@@ -442,8 +455,8 @@ void uploadThingSpeak() {
   // field2 = soil moisture
   // field3 = water level
   // field4 = OpenWeather main.temp
-  // field5 = irrigation volume
-  // field6 = irrigation status, pump ON=1, OFF=0
+  // field5 = irrigation volume from Mega Vol=
+  // field6 = irrigation status, Pump=1 ON, Pump=0 OFF
   // field7 = DHT11 humidity
   // field8 = OpenWeather main.humidity
 
@@ -460,6 +473,8 @@ void uploadThingSpeak() {
 
   String statusText = "MODE=" + modeStatus +
                       ",PUMP=" + String(pumpStatus) +
+                      ",MEGA_VOL=" + String(irrigationVolumeML) +
+                      ",PHONE_SET_VOL=" + String(phoneSetVolumeML) +
                       ",WEATHER_MAIN=" + weatherMain +
                       ",WEATHER_DESC=" + weatherDesc +
                       ",CITY=" + weatherCity +
@@ -539,12 +554,32 @@ const char MAIN_PAGE[] PROGMEM = R"rawliteral(
       font-size: 13px;
       color: #52616b;
       margin-top: 6px;
+      line-height: 1.35;
     }
     .good {
       color: #12805c;
     }
     .bad {
       color: #b42318;
+    }
+    input {
+      width: 100%;
+      font-size: 22px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #bbb;
+      box-sizing: border-box;
+      margin-top: 8px;
+    }
+    button {
+      width: 100%;
+      margin-top: 14px;
+      font-size: 22px;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: #f26b00;
+      color: white;
     }
     .footer {
       margin-top: 18px;
@@ -582,8 +617,19 @@ const char MAIN_PAGE[] PROGMEM = R"rawliteral(
     </div>
 
     <div class="card">
-      <div class="label">Field 5: Irrigation Volume</div>
+      <div class="label">Target Volume</div>
       <div class="value" id="volume">--</div>
+
+      <div class="label" style="margin-top:18px;">Set New Volume (mL)</div>
+      <input id="newVolume" type="number" min="10" max="5000" value="100">
+
+      <button onclick="setVolume()">Set Volume</button>
+
+      <div class="small">
+        Range: 10 to 5000 mL<br>
+        Phone set value: <span id="phoneSetVolume">100</span> mL<br>
+        Mega actual volume still follows keypad unless Mega code is changed.
+      </div>
     </div>
 
     <div class="card">
@@ -638,6 +684,23 @@ function fmt(v, unit) {
   return v + unit;
 }
 
+async function setVolume() {
+  const v = document.getElementById("newVolume").value;
+
+  try {
+    const res = await fetch("/setVolume?vol=" + encodeURIComponent(v));
+
+    if (res.ok) {
+      document.getElementById("phoneSetVolume").textContent = v;
+      loadData();
+    } else {
+      alert("Volume setting failed. Use 10 to 5000 mL.");
+    }
+  } catch (e) {
+    alert("ESP32 connection error.");
+  }
+}
+
 async function loadData() {
   try {
     const res = await fetch("/data?x=" + Date.now());
@@ -649,7 +712,11 @@ async function loadData() {
     document.getElementById("waterADC").textContent = "ADC: " + d.waterADC;
 
     document.getElementById("weatherTemp").textContent = fmt(d.weatherTemp, "°C");
+
     document.getElementById("volume").textContent = fmt(d.volume, " mL");
+    document.getElementById("phoneSetVolume").textContent = d.phoneSetVolume;
+    document.getElementById("newVolume").value = d.phoneSetVolume;
+
     document.getElementById("pump").textContent = d.pump;
     document.getElementById("dhtHum").textContent = fmt(d.dhtHum, "%");
     document.getElementById("weatherHum").textContent = fmt(d.weatherHum, "%");
@@ -685,6 +752,33 @@ void handleRoot() {
   server.send_P(200, "text/html", MAIN_PAGE);
 }
 
+void handleSetVolume() {
+  if (!server.hasArg("vol")) {
+    server.send(400, "text/plain", "Missing volume");
+    return;
+  }
+
+  int v = server.arg("vol").toInt();
+
+  if (v < 10 || v > 5000) {
+    server.send(400, "text/plain", "Volume out of range");
+    return;
+  }
+
+  phoneSetVolumeML = v;
+
+  // Optional future command. Your current Mega code will ignore this.
+  // This line is harmless and keeps the web function ready for future upgrade.
+  MegaSerial.print("VOL=");
+  MegaSerial.println(phoneSetVolumeML);
+
+  Serial.print("Phone page set volume: ");
+  Serial.print(phoneSetVolumeML);
+  Serial.println(" mL");
+
+  server.send(200, "text/plain", "OK");
+}
+
 void handleData() {
   String json = "{";
 
@@ -694,6 +788,7 @@ void handleData() {
   json += "\"waterADC\":" + String(waterLevelADC) + ",";
   json += "\"weatherTemp\":" + jsonFloat(weatherTempC, 1) + ",";
   json += "\"volume\":" + jsonInt(irrigationVolumeML) + ",";
+  json += "\"phoneSetVolume\":" + String(phoneSetVolumeML) + ",";
   json += "\"pump\":" + String(pumpStatus) + ",";
   json += "\"dhtHum\":" + jsonFloat(dhtHumPct, 1) + ",";
   json += "\"weatherHum\":" + jsonFloat(weatherHumPct, 1) + ",";
@@ -746,6 +841,7 @@ void setup() {
 
   server.on("/", handleRoot);
   server.on("/data", handleData);
+  server.on("/setVolume", handleSetVolume);
 
   server.on("/weather", []() {
     updateWeather(true);

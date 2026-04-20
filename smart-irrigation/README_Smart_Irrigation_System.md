@@ -66,6 +66,7 @@ The Arduino Mega 2560 is the main controller. It reads sensor data, applies irri
 | Device | Mega2560 Pin |
 |---|---|
 | Soil moisture sensor signal | A0 |
+| Water sensor signal | A1 |
 | DHT11 data | D2 |
 | Relay signal | D8 |
 | Mode button | D3 |

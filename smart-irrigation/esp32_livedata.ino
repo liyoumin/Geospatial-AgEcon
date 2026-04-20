@@ -1,7 +1,7 @@
 /*
   ESP32 Dev Module code for Smart Irrigation System
   -------------------------------------------------
-  Matches Mega2560 protocol. 192.168.4.1
+  Mega2560 protocol. 192.168.4.1
 
   Functions:
   - Reads telemetry from Mega2560 over UART
@@ -21,11 +21,11 @@
 
 // ===================== WIFI =====================
 // Option 1: fill in your Wi-Fi credentials
-const char* WIFI_SSID = "";
-const char* WIFI_PASS = "";
+const char* WIFI_SSID = "iphone Youmin li";
+const char* WIFI_PASS = "12345678";
 
 // Option 2: if WIFI_SSID is blank, ESP32 starts its own AP
-const char* AP_SSID   = "SmartIrrigationESP32";
+const char* AP_SSID   = "SmartIrrigation-Youmin";
 const char* AP_PASS   = "12345678";
 
 // ===================== UART TO MEGA =====================

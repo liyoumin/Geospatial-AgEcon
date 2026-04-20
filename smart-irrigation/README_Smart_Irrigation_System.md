@@ -177,7 +177,7 @@ The ESP32 runs in **AP + STA mode**:
 Phone connection:
 
 ```text
-WiFi Name: SmartIrrigation_ESP32
+WiFi Name: SmartIrrigation_Youmin
 Password: 12345678
 Browser: http://192.168.4.1
 ```

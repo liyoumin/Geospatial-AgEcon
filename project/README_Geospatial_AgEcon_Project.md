@@ -1,22 +1,21 @@
 # Geospatial-AgEcon Project Scripts
 
-This folder contains the main R scripts used to clean, analyze, model, and visualize the state-level alfalfa–SPEI panel. The workflow supports research on drought exposure, irrigation status, alfalfa production, export value, and spatial heterogeneity across U.S. states.
-
-> **Filename note:** In the current GitHub repository, the files appear as `emperical.R`, `geo_diag_and_map.R`, `plotMapping.R`, and `AMIRA.R`. For clarity, this README refers to them as `empirical.R`, `geo_diag.R`, `plotMapping.R`, and `ARIMA.R`. Rename the files if you want consistent spelling.
-
+This folder contains the main R scripts used clean_data (df.csv) to analyze, model, and visualize the state-level alfalfa–SPEI panel. The workflow supports research on drought exposure, irrigation status, alfalfa production, export value, and spatial heterogeneity across U.S. states.
 ---
 
 ## Project Purpose
 
 The scripts support a geospatial agricultural economics workflow that links alfalfa production outcomes with drought indicators and irrigation conditions. The main analytical objectives are:
 
-1. Build and clean a state-year panel for alfalfa production, acreage, yield, price, irrigation, water use, and export value.
-2. Construct irrigation-share and irrigation-dummy variables from irrigated acreage and alfalfa acreage.
-3. Estimate empirical models for the relationship between SPEI drought conditions, irrigation status, alfalfa yield, production, and export value.
-4. Run robustness checks using fixed effects, weighted least squares, instrumental variables, and generalized additive models.
-5. Conduct spatial diagnostics using variograms, cross-variograms, co-kriging, and state-level mapping.
-6. Generate publication-ready maps and figures for alfalfa acreage, production, export rate, SPEI change, and irrigation-related outcomes.
-7. Model and forecast SPEI time-series patterns using ARIMA/SARIMA methods.
+1. Get a state-year panel for alfalfa production, acreage, yield, price, irrigation, water use, and export value from cleandata folder.
+2. Model and forecast SPEI time-series patterns using ARIMA/SARIMA methods.
+4. Spatial diagnostics using variograms, cross-variograms, co-kriging, and state-level mapping.
+5. Construct irrigation-share and irrigation-dummy variables from irrigated acreage and alfalfa acreage.
+6. Estimate empirical models for the relationship between SPEI drought conditions, irrigation status, alfalfa yield, production, and export value.
+7. Run robustness checks using fixed effects, weighted least squares, instrumental variables, 2SLS, and generalized additive models.
+8. Irrigation methods yield comparsion and water efficiency caculation.
+9. Generate publication-ready maps and figures for alfalfa acreage, production, export rate, SPEI change, and irrigation-related outcomes.
+
 
 ---
 
@@ -31,6 +30,7 @@ Geospatial-AgEcon/
 │   ├── geo_diag.R
 │   ├── plotMapping.R
 │   ├── ARIMA.R
+│   ├── Robust check.R
 │   └── README.md
 ├── output/
 │   ├── figures/
@@ -39,15 +39,6 @@ Geospatial-AgEcon/
 │   └── models/
 └── README.md
 ```
-
-If the scripts are run from the `project/` folder, use relative paths such as:
-
-```r
-readr::read_csv("../cleandata/df.csv")
-ggsave("../output/figures/figure_name.png")
-```
-
-Avoid hard-coded local paths such as `C:/Users/...` before publishing the repository.
 
 ---
 
@@ -67,13 +58,10 @@ This script prepares the analysis panel and estimates empirical relationships be
 ```r
 irr_share = irrigated_acres / alf_acres
 ```
-
-- Fills missing irrigation share values within each state using last available year and, if needed, next available year.
-- Creates an irrigation dummy:
-
 ```r
 irrigation_dummy = 1 if irr_share > 0.2
 irrigation_dummy = 0 if irr_share <= 0.2
+NA use value from last year
 ```
 
 - Estimates fixed-effects models using `fixest::feols()`.
@@ -103,7 +91,7 @@ agricolae
 ggplot2
 ```
 
-**Expected inputs:**
+**inputs:**
 
 - Cleaned state-year alfalfa panel, typically `df.csv`.
 - Required variables may include:
@@ -175,7 +163,7 @@ sandwich
 modelsummary
 ```
 
-**Expected inputs:**
+**inputs:**
 
 - Cleaned alfalfa state-year panel, usually loaded as `df`.
 - State identifiers such as `state_ansi`, `state`, or `stusps`.
@@ -193,11 +181,6 @@ modelsummary
 - Fitted variogram or LMC model objects.
 - Co-kriging prediction objects.
 - State-level maps of acreage and value changes.
-
-**Important note:**
-
-Some objects, such as `grid_sf` and `us_states`, should be created or loaded before the prediction/mapping sections. If the script is run from a fresh R session, check that all required spatial objects exist before running the co-kriging and mapping blocks.
-
 ---
 
 ### 3. `plotMapping.R`
@@ -251,11 +234,10 @@ viridis
 tigris
 ```
 
-**Expected inputs:**
+**inputs:**
 
-- Cleaned panel data, usually `df.csv`.
+- Cleaned panel data, `df.csv`.
 - State identifier variables:
-  - `state_ansi`
   - `STUSPS`
   - `year`
 - Main analytical variables:
@@ -264,11 +246,11 @@ tigris
   - `alf_yield`
   - `alf_production`
   - `alf_acres`
-  - `hay_alf_usd`
+  - `alf_price`
   - `irrigated_production`
   - `water_acrefeet_per_acre`
 
-**Expected outputs:**
+**outputs:**
 
 - Scatter plot: change in export value vs. change in SPEI.
 - Map: average alfalfa acres by state.
@@ -276,8 +258,7 @@ tigris
 - Map: average export rate by state.
 - Map: alfalfa production change by state.
 
-**Recommended output names:**
-
+**output names:**
 ```text
 fig_spei_export_change.png
 map_avg_alfalfa_acres.png
@@ -288,7 +269,7 @@ map_production_change_2017_2022.png
 
 ---
 
-### 4. `ARIMA.R` / `AMIRA.R`
+### 4. `ARIMA.R`
 
 **Purpose:** SPEI time-series plotting, ARIMA/SARIMA estimation, and forecast validation.
 
@@ -338,7 +319,7 @@ zoo
 scales
 ```
 
-**Expected inputs:**
+**inputs:**
 
 - SPEI panel data, such as `alfal_spei_panel_2005_2025.csv`.
 - Required variables:
@@ -346,7 +327,7 @@ scales
   - `year` or monthly date variable
   - `speimean` or equivalent SPEI variable
 
-**Expected outputs:**
+**outputs:**
 
 ```text
 state_level_annual_spei.png
@@ -360,18 +341,6 @@ arima_cross_validation_spei_alt.png
 The SARIMA model should be estimated on monthly data, not annual data. Annual SPEI plots are useful for description, but monthly frequency is required for the seasonal `[12]` ARIMA structure.
 
 ---
-
-## Suggested Run Order
-
-Run the scripts in this order:
-
-```r
-source("empirical.R")
-source("geo_diag.R")
-source("plotMapping.R")
-source("ARIMA.R")
-```
-
 A practical workflow is:
 
 1. Use `empirical.R` to construct the final analysis panel and irrigation variables.
@@ -410,50 +379,12 @@ The project assumes a state-year or state-month panel with the following core va
 
 Before publishing or sharing the project, consider the following revisions:
 
-1. Replace all local absolute paths with relative project paths.
-2. Standardize script names and spelling:
-
-```text
-emperical.R        -> empirical.R
-geo_diag_and_map.R -> geo_diag.R
-AMIRA.R            -> ARIMA.R
-plotMapping.R      -> plotMapping.R
-```
-
-3. Move package installation commands to a separate setup script or comment them out after installation.
-4. Save all figures to an `output/figures/` or `output/maps/` folder.
-5. Save model tables to `output/tables/`.
-6. Avoid using `save.image()` unless the full R workspace is intentionally needed.
-7. Check that all intermediate spatial objects, such as `grid_sf`, `us_states`, and `states_sf`, are created before being used.
-8. Use consistent variable names across scripts, especially for:
-
-```text
-alf_spei_mean vs speimean
-stusps vs STUSPS
-alf_price_usd_ton vs alfalfa_price_usd_ton
-alf_production vs hay_alf_tons
-```
-
+1. Move package installation commands to a separate setup script or comment them out after installation.
+2. Save all figures to an `output/figures/` or `output/maps/` folder.
+3. Save model tables to `output/tables/`.
+4. Avoid using `save.image()` unless the full R workspace is intentionally needed.
+5. Check that all intermediate spatial objects, such as `grid_sf`, `us_states`, and `states_sf`, are created before being used.
 ---
-
-## Example Setup Code
-
-```r
-packages <- c(
-  "dplyr", "tidyr", "readr", "ggplot2", "ggrepel",
-  "sf", "tigris", "tmap", "terra", "rmapshaper",
-  "fixest", "lmtest", "sandwich", "modelsummary",
-  "gstat", "mgcv", "forecast", "patchwork", "zoo",
-  "scales", "viridis", "agricolae"
-)
-
-new_packages <- packages[!(packages %in% installed.packages()[, "Package"])]
-if (length(new_packages) > 0) {
-  install.packages(new_packages, repos = "https://cloud.r-project.org")
-}
-
-invisible(lapply(packages, library, character.only = TRUE))
-```
 
 ---
 

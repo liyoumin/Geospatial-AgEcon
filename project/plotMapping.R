@@ -90,13 +90,12 @@ df0 <- df0 %>%
   mutate(
     Export_Value = suppressWarnings(as.numeric(Export_Value)),
     alf_spei_mean = suppressWarnings(as.numeric(alf_spei_mean)),
-    hay_alfalfa_yield_tons_per_acre = suppressWarnings(as.numeric(hay_alfalfa_yield_tons_per_acre)),
-    hay_alf_tons = suppressWarnings(as.numeric(hay_alf_tons)),
-    hay_alfalfa_price_per_ton = suppressWarnings(as.numeric(hay_alfalfa_price_per_ton)),
-    irr_ton = suppressWarnings(as.numeric(alf_irrigated_production_tons)),
-    irr_water_acrefeet = suppressWarnings(as.numeric(irrigated_water_acrefeet_per_acre)),
-    alf_prod_ton = readr::parse_number(as.character(hay_alf_tons)),
-    alf_acres = readr::parse_number(as.character(hay_alf_acres))
+    hay_alfalfa_yield_tons_per_acre = suppressWarnings(as.numeric(alf_yield)),
+    hay_alf_tons = suppressWarnings(as.numeric(alf_production)),
+    hay_alfalfa_price_per_ton = suppressWarnings(as.numeric(alfalfa_price_usd_ton)),
+    irr_ton = suppressWarnings(as.numeric(irrigated_production)),
+    irr_water_acrefeet = suppressWarnings(as.numeric(water_acrefeet_per_acre)),
+    alf_acres = readr::parse_number(as.character(alf_acres))
   )
 
 # ---------------------------

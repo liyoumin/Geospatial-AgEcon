@@ -5,63 +5,71 @@ library(sandwich)
 library(modelsummary)
 library(readr)
 library(dplyr)
+library(tidyr)
 
-alf_spei <- read.csv("C:/Users/liyoumin/Desktop/Alfalfa-SPEI/County_alf_irr/merge/panel2_with_alf_spei.csv")
+alf <- read.csv("C:/Users/liyoumin/Desktop/Alfalfa drought/Estimation/df.csv")
 
 ### irr share
-df <- alf_spei %>%
-mutate(
-  irrigation_share = alf_irrigated_acres / hay_alf_acres,
-  irrigation_dummy = if_else(
-  !is.na(irrigation_share) & haylage_alfafa_acres_harvested > 0 & irrigation_share > 0.2,
-  1, 0
-  )
-)
+df <- alf %>%
+  arrange(state, year) %>%
+  group_by(state) %>%
+  mutate(
+    irr_share = case_when(
+      !is.na(irrigated_acres) & !is.na(alf_acres) & alf_acres > 0 ~ irrigated_acres / alf_acres,
+      TRUE ~ NA_real_
+    )
+  ) %>%
+  fill(irr_share, .direction = "downup") %>%   # if NA, use last year; if no last year, use next year
+  mutate(
+    irrigation_dummy = case_when(
+      !is.na(irr_share) & irr_share > 0.2 ~ 1,
+      !is.na(irr_share) & irr_share <= 0.2 ~ 0,
+      TRUE ~ NA_real_
+    ),
+  ) %>%
+  ungroup()
 
 write_csv(df, "df.csv")
-df <- read.csv("C:/Users/liyoumin/Desktop/Alfalfa-SPEI/County_alf_irr/merge/df_update.csv")
 
 ## fixed effects
-model <- feols(hay_alfalfa_yield_tons_per_acre ~ alf_spei_mean + irrigation_dummy
+model <- feols(alf_yield ~ alf_spei_mean + irrigation_dummy
                + midwest + west +
-                 (irrigation_dummy*alf_spei_mean) | year + state_ansi , data = df)
+                 (irrigation_dummy*alf_spei_mean) | year + stusps, data = df)
 
-ols <- lm(hay_alfalfa_yield_tons_per_acre ~ alf_spei_mean + irrigation_dummy + 
+ols <- lm(alf_yield ~ alf_spei_mean + irrigation_dummy + 
             west + midwest + (irrigation_dummy*alf_spei_mean), data = df)
-modelp <- feols(log(hay_alf_tons) ~ alf_spei_mean + irrigation_dummy + hay_alf_acres +
+modelp <- feols(log(alf_production) ~ alf_spei_mean + irrigation_dummy + alf_acres +
                   midwest + west + (irrigation_dummy*alf_spei_mean)| year, data = df)
 ###robast check(to account for heteroskedasticity or clustering)
 
 summary(model, se = "hetero")
-summary(model, cluster = "state_ansi")
+summary(model, cluster = "stusps")
 summary(model, cluster = "year")
 
 summary(ols, se ="hetero")
-summary(ols, cluster = "state_ansi")
+summary(ols, cluster = "stusps")
 summary(ols, cluster = "year")
 
 summary(modelp, se = "hetero")
-
+summary(modelp, cluster = "stusps")
 #regression1 Export
-df$Export_Value_0 <- ifelse(is.na(df$Export_Value), 0, df$Export_Value)
-model1 <- feols(Export_Value_0 ~ irrigation_dummy + alf_spei_mean + (irrigation_dummy*alf_spei_mean) 
-                + hay_alfalfa_yield_tons_per_acre + hay_alf_acres + hay_alf_tons + hay_alfalfa_price_per_ton+
+df$Export_Value <- ifelse(is.na(df$Export_Value), 0, df$Export_Value)
+model1 <- feols(Export_Value ~  alf_spei_mean + (irrigation_dummy*alf_spei_mean) 
+                + alf_yield + alf_acres + alf_production + alf_price_usd_ton+
                   west + midwest| year, data = df)
 summary(model1, se = "hetero")
 
 
 #regression2
-model2 <- lm(Export_Value_0 ~ irrigation_dummy + alf_spei_mean + 
-               hay_alfalfa_yield_tons_per_acre + (irrigation_dummy*alf_spei_mean)
-             + west + midwest + hay_alfalfa_price_per_ton
-             + hay_alf_acres  + hay_alf_tons, 
+model2 <- lm(Export_Value ~ alf_spei_mean + 
+               alf_yield + (irrigation_dummy*alf_spei_mean)
+             + west + midwest + alf_acres + alf_production + alf_price_usd_ton, 
              data = df)
 summary(model2)
 
 #regression3
-model3 <- feols(Export_Value ~ alf_spei_mean + irrigation_dummy + (alf_spei_mean*irrigation_dummy) 
-                + west + midwest + hay_alf_tons +  hay_alfalfa_yield_tons_per_acre 
-                + hay_alfalfa_price_per_ton| year, data = df)
+model3 <- feols(Export_Value ~ alf_spei_mean + (alf_spei_mean*irrigation_dummy) +
+                 alf_acres + alf_production + alf_price_usd_ton + alf_yield| stusps + year, data = df)
 summary(model3)
 plot(model3)
 
@@ -95,16 +103,16 @@ summary(lmp)
 # hay_alfalfa_price_per_ton + irrigation + west + midwest + hay_alfalfa_production_tons +  hay_alfalfa_yield_tons_per_acre +hay_alfalfa_acres_harvested
 
 fs <- feols(
-  hay_alfalfa_yield_tons_per_acre ~ alf_spei_mean + irrigation_dummy + 
-    (alf_spei_mean*irrigation_dummy) + irrigation_dummy | state_ansi + year,
+  alf_yield ~ alf_spei_mean + irrigation_dummy + 
+    (alf_spei_mean*irrigation_dummy)| stusps + year,
   data = df
 )
 summary(fs)
 
 iv_model <- feols(
-  Export_Value_0 ~ hay_alfalfa_price_per_ton + west 
-  | year + state_ansi |  
-    hay_alfalfa_yield_tons_per_acre ~ alf_spei_mean + irrigation_dummy +(alf_spei_mean*irrigation_dummy),
+  Export_Value ~ alf_price_usd_ton
+  | year + stusps |  
+    alf_yield ~ alf_spei_mean + irrigation_dummy +(alf_spei_mean*irrigation_dummy),
   data = df
 )
 
@@ -127,7 +135,7 @@ st_sf <- USAboundaries::us_states() %>%
 
 # 2) join geometry into your panel
 alf_panel_sf <- df %>%
-  mutate(state = tolower(State)) %>%
+  mutate(state = tolower(state)) %>%
   left_join(st_sf, by = "state") %>%
   st_as_sf()
 
@@ -143,11 +151,11 @@ alf_centroid <- alf_panel_sf %>%
 # 4) clean variables
 alf_clean <- alf_centroid %>%
   mutate(
-    Export_Value  = as.numeric(Export_Value_0),
+    Export_Value  = as.numeric(Export_Value),
     SPEI          = as.numeric(alf_spei_mean),
     irrigation    = as.numeric(irrigation_dummy),
-    Alf_Price_ton = as.numeric(hay_alfalfa_price_per_ton),
-    alf_yield_raw = as.numeric(hay_alfalfa_yield_tons_per_acre),
+    Alf_Price_ton = as.numeric(alf_price_usd_ton),
+    alf_yield_raw = as.numeric(alf_yield),
     lon           = as.numeric(lon),
     lat           = as.numeric(lat)
   ) %>%
@@ -164,9 +172,9 @@ alf_clean <- alf_centroid %>%
 # 5) scale variables
 alf_scaled <- alf_clean %>%
   mutate(
-    alf_value_usd     = readr::parse_number(as.character(hay_alf_usd)) / 1e6,
-    alf_acres         = readr::parse_number(as.character(hay_alf_acres)) / 1e3,
-    alf_prod_ton      = readr::parse_number(as.character(hay_alf_tons)) / 1e3,
+    alf_value_usd     = readr::parse_number(as.character(hay_alf_usd_value)) / 1e3,
+    alf_acres         = readr::parse_number(as.character(alf_acres)) / 1e3,
+    alf_prod_ton      = readr::parse_number(as.character(alf_production)) / 1e3,
     Alf_Price_ton     = as.numeric(scale(Alf_Price_ton)),
     alf_yield_tonacre = as.numeric(scale(alf_yield_raw)),
     SPEI              = as.numeric(scale(SPEI)),
@@ -185,9 +193,9 @@ alf_scaled <- alf_clean %>%
 
 # 6) GAM
 gam_model_spatial <- gam(
-  Export_Value ~ SPEI + irrigation*SPEI +
+  Export_Value ~ alf_spei_mean + irrigation_dummy*alf_spei_mean +
     alf_yield_tonacre + 
-    s(Alf_Price_ton, k = 5) +
+    s(Alf_Price_ton, k = 10) +
     s(lon, lat, k = 10),
   data = alf_scaled,
   method = "REML"
@@ -207,10 +215,10 @@ library(agricolae)
 library(ggplot2)
 df2 <- df %>%
   transmute(
-    non_irr_ton  =alf_non_irrigated_yield_tons_per_acre,
-    irr_ton      = alf_irrigated_yield_tons_per_acre,
-    irr_gra_ton  = irrigated_yield_tons_per_acre_dry_basis_gravity,
-    irr_pres_ton = irrigated_yield_tons_per_acre_dry_basis_pressure
+    non_irr_ton  = non_irr_yield,
+    irr_ton      = irr_yield_tons_per_acre_general,
+    irr_gra_ton  = irr_yield_tons_per_acre_method_gravity,
+    irr_pres_ton = irr_yield_tons_per_acre_method_pressure
   ) %>%
   mutate(across(everything(), ~ readr::parse_number(as.character(.)))) %>%
   # keep rows where at least one yield exists
@@ -226,8 +234,8 @@ df_long <- df2 %>%
   mutate(
     Treatment = factor(
       Treatment,
-      levels = c("non_irr_ton", "irr_gra_ton", "irr_pres_ton", "irr_ton" ),
-      labels = c("Non-Irrigated", "Gravity",   "Irrigated (General)", "Pressure")
+      levels = c("non_irr_ton", "irr_gra_ton", "irr_ton", "irr_pres_ton"),
+      labels = c("Non-Irrigated", "Gravity", "Irrigated (General)", "Pressure" )
     )
   )
 
@@ -290,15 +298,15 @@ summary_table
 df_eff <- df %>%
   transmute(
     # yields (tons/acre)
-    y_nonirr   = alf_non_irrigated_yield_tons_per_acre,
-    y_irr      = alf_irrigated_yield_tons_per_acre,
-    y_gra      = irrigated_yield_tons_per_acre_dry_basis_gravity,
-    y_pres     = irrigated_yield_tons_per_acre_dry_basis_pressure,
-    
+    y_nonirr   = non_irr_yield,
+    y_irr      = irr_yield_tons_per_acre_general,
+    y_gra      = irr_yield_tons_per_acre_method_gravity,
+    y_pres     = irr_yield_tons_per_acre_method_pressure,
+
     # water (acrefeet/acre)
-    w_irr      = irrigated_water_acrefeet_per_acre,
-    w_gra      = irrigated_water_acrefeet_per_acre_gravity,
-    w_pres     = irrigated_water_acrefeet_per_acre_pressure
+    w_irr      = water_applied_af_acre_general,
+    w_gra      = water_applied_af_acre_method_gravity,
+    w_pres     = water_applied_af_acre_method_pressure
   ) %>%
   mutate(across(everything(), ~ readr::parse_number(as.character(.)))) %>%
   # efficiencies: tons per acre-foot (higher = better)

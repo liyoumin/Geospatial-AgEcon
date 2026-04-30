@@ -1,4 +1,4 @@
-## Alfalfa, SPI mapping
+## Alfalfa, SPEI mapping
 ##	Created by YOUMIN LI
 ## Load required libraries
 pkgs <- c("sf","tmap","tmaptools","grid","terra","rmapshaper")
@@ -17,49 +17,12 @@ library(ggrepel)
 save.image("my_workspace.RData")
 load("my_workspace.RData")
 ###################################
-
-## Read in raster DEM of AL
-alDEM <- rast("/Users/macpro/Desktop/Youmin-phd/geospatical/Mapping Tutorial/Example Data/DEM_SE_US/AL_dem_projected.tif")
-## Reproject AL DEM to match shapefiles 
-#st_transform(alDEM, 4326)
-## Write out re-projected AL DEM
-#writeRaster(alDEM, overwrite=TRUE, filename="/Volumes/KINGSTON/R Class/Example Data/DEM_SE_US/Al_dem_projected.tif")
-## Create a tm package map object
-m_al <- tm_shape(alDEM) + tm_raster("AL_dem_projected.tif", palette="BuGn", style="fixed", breaks=c(0,50,100,200,400,Inf), interval.closure="left", title="Elevation (m)") + 
-		tm_shape(alregs, is.master=TRUE) + tm_polygons("Identifier", title = "", showNA = TRUE, alpha=0, border.col = "black", border.alpha = 1, legend.show=FALSE) +
-		tm_layout(frame=TRUE, inner.margins = c(0.08, 0.035, 0.01, 0.07), legend.show=TRUE, legend.position=c(0.79, 0.85), legend.title.size=1) +
-		tm_text("Identifier", shadow=TRUE, bg.color="white") + tm_grid(projection=4326, labels.size = .6, lwd=0, labels.inside.frame = FALSE)
-
-## Create US CONUS map object with AL in red
-m_usa <- tm_shape(US_cont) + tm_borders(lwd=1, col = "black", alpha = .5) + tm_fill("isAL")
-
-## Create a view port object (inset mapping area)
-vp_usa <- viewport(x = 0.65, y = 0.15, width = 0.5, height = 0.5)
-
-## Open png graphics device
-png(file = "/Users/macpro/Desktop/Youmin-phd/geospatical/Mapping Tutorial/Example Output/StudyMap_2024.png", width = 3200, height = 4500, units = 'px', res = 600)
-par(bg="white")
-
-## Switch on mapping mode
-tmap_mode("plot")
-## Call map object
-m_al
-## Print US map in viewport
-print(m_usa, vp = vp_usa)
-dev.off()
-
-# Load CONUS states only
-states_sf <- states(cb = TRUE) %>%
-  st_as_sf() %>%
-  filter(!STUSPS %in% c("AK","HI","PR","GU","AS","VI","MP"))
-
 ### scatter plot====================================================================================
 # Change from 2017 to 2022 for each state
 # =========================================================
 # Alfalfa-SPEI state analysis and mapping
 # Cleaned version of your pasted script
 # =========================================================
-
 # ---------------------------
 # 0. Packages
 # ---------------------------

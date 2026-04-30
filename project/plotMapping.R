@@ -78,7 +78,7 @@ options(tigris_use_cache = TRUE)
 # ---------------------------
 # 1. Read data
 # ---------------------------
-df<- read.csv("C:/Users/liyoumin/Desktop/Alfalfa-SPEI/County_alf_irr/merge/df_update.csv")
+df<- read.csv("C:/Users/liyoumin/Desktop/Alfalfa-SPEI/County_alf_irr/merge/df.csv")
 
 # If df is already sf, drop geometry safely; if not, keep as is
 df0 <- if (inherits(df, "sf")) sf::st_drop_geometry(df) else df

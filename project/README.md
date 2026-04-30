@@ -1,4 +1,4 @@
-# Geospatial-AgEcon Project Scripts
+# Geospatial-AgEcon- Drought impacts on alfalfa - empirical code
 
 This folder contains the main R scripts used clean_data (df.csv) to analyze, model, and visualize the state-level alfalfa–SPEI panel. The workflow supports research on drought exposure, irrigation status, alfalfa production, export value, and spatial heterogeneity across U.S. states.
 ---

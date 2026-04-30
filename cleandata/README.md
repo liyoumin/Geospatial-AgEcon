@@ -15,6 +15,10 @@ This repository contains a cleaned state-year panel for U.S. alfalfa production,
 | `county_state_variable_mapping.csv` | Crosswalk between `county_state_panel` variable names and final `state_panel` variable names. |
 | `hay_haylage_variables_added.csv` | List of contextual hay & haylage irrigation variables added from USDA irrigation files. |
 
+## |Code| Description |
+|county.R and countytostate.R|clean county level data and aggregate to state year|
+|final_df_workflow|State level data clean and merge with alf_spei from Arcpy, and join missiong valide value fom countytostate|
+
 ## Raw input files
 
 | File | Role in workflow |
@@ -226,8 +230,7 @@ The workflow performs the following steps:
 12. Save final panel and diagnostics.
 
 ## Recommended citation note for methods section
-
-The following text can be used in a methods appendix:
+appendix:
 
 > The analysis uses a state-year alfalfa panel constructed from USDA production, irrigation, price, and export datasets. State-level observations are retained as the primary source. Missing or zero values in the state panel are supplemented using county-derived records aggregated to the state-year level, with county values used only when the corresponding state-level value is unavailable or zero. Acreage and production variables are aggregated by summing county observations, while yield and irrigation-share variables are recalculated from aggregated totals. Drought exposure is measured using SPEI-03 averaged over alfalfa land within each state for April–September, generated through an ArcPy spatial-processing workflow. HAY & HAYLAGE irrigation variables are retained separately as contextual irrigation measures and are not used to overwrite hay-only alfalfa production variables.
 

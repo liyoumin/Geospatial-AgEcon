@@ -235,7 +235,7 @@ appendix:
 > The analysis uses a state-year alfalfa panel constructed from USDA production, irrigation, price, and export datasets. State-level observations are retained as the primary source. Missing or zero values in the state panel are supplemented using county-derived records aggregated to the state-year level, with county values used only when the corresponding state-level value is unavailable or zero. Acreage and production variables are aggregated by summing county observations, while yield and irrigation-share variables are recalculated from aggregated totals. Drought exposure is measured using SPEI-03 averaged over alfalfa land within each state for April–September, generated through an ArcPy spatial-processing workflow. HAY & HAYLAGE irrigation variables are retained separately as contextual irrigation measures and are not used to overwrite hay-only alfalfa production variables.
 
 ## Notes
-- AZ hay_harvest_acres < hay&haylage_irrigated_acres in 2018, but hay_census&survey data do not include have data in 2018; so for production we only use hay category. Some state hay acres = hay$haylage acres, there are overlap for both production.
+- AZ hay_harvest_acres < hay&haylage_irrigated_acres in 2018, but hay_census&survey data do not include have data in 2018; so for production we only use hay category. Some state hay acres = hay&haylage acres, there are overlap for both production.
 - Zero values from the county-derived panel are not used to fill state-panel values, except for `irr_share`, where zero can represent a meaningful absence of irrigation.
 - HAY & HAYLAGE irrigation variables are intentionally kept separate from hay-only alfalfa variables.
 - `Export_Value` is in thousand dollars; `export_usd` is in dollars.

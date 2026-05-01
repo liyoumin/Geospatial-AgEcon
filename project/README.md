@@ -16,7 +16,6 @@ The scripts support a geospatial agricultural economics workflow that links alfa
 8. Irrigation methods yield comparsion and water efficiency caculation.
 9. Generate publication-ready maps and figures for alfalfa acreage, production, export rate, SPEI change, and irrigation-related outcomes.
 
-
 ---
 
 ## Recommended File Structure
@@ -137,31 +136,6 @@ This script evaluates spatial patterns in SPEI, alfalfa export value, and relate
 - Fits linear models of coregionalization using `gstat`.
 - Performs co-kriging prediction over a spatial grid.
 - Creates state-level maps for changes in alfalfa acres, alfalfa value, and percent changes across selected years.
-
-**Key packages:**
-
-```r
-dplyr
-tibble
-janitor
-tidyr
-lubridate
-purrr
-readr
-ggplot2
-tigris
-sf
-tmap
-leaflet
-gstat
-terra
-rmapshaper
-exactextractr
-fixest
-lmtest
-sandwich
-modelsummary
-```
 
 **inputs:**
 
@@ -307,18 +281,6 @@ ARIMA(2,0,2)(1,0,2)[12]
 - Calculates forecast RMSE and MAE by horizon.
 - Runs a Ljung-Box test for residual autocorrelation.
 
-**Key packages:**
-
-```r
-dplyr
-ggplot2
-lubridate
-forecast
-patchwork
-zoo
-scales
-```
-
 **inputs:**
 
 - SPEI panel data, such as `alfal_spei_panel_2005_2025.csv`.
@@ -338,7 +300,7 @@ arima_cross_validation_spei_alt.png
 
 **Important note:**
 
-The SARIMA model should be estimated on monthly data, not annual data. Annual SPEI plots are useful for description, but monthly frequency is required for the seasonal `[12]` ARIMA structure.
+The SARIMA model be estimated on monthly data. Annual SPEI plots are useful for description, but monthly frequency is required for the seasonal ARIMA structure.
 
 ---
 A practical workflow is:
@@ -385,7 +347,6 @@ Before publishing or sharing the project, consider the following revisions:
 4. Avoid using `save.image()` unless the full R workspace is intentionally needed.
 5. Check that all intermediate spatial objects, such as `grid_sf`, `us_states`, and `states_sf`, are created before being used.
 ---
-
 ---
 
 ## Citation / Author

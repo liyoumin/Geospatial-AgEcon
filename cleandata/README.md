@@ -229,7 +229,7 @@ The workflow performs the following steps:
 11. Recalculate derived variables such as yield, irrigation share, production value, export value, and export rate.
 12. Save final panel and diagnostics.
 
-## Recommended citation note for methods section
+## Citation note for methods section
 appendix:
 
 > The analysis uses a state-year alfalfa panel constructed from USDA production, irrigation, price, and export datasets. State-level observations are retained as the primary source. Missing or zero values in the state panel are supplemented using county-derived records aggregated to the state-year level, with county values used only when the corresponding state-level value is unavailable or zero. Acreage and production variables are aggregated by summing county observations, while yield and irrigation-share variables are recalculated from aggregated totals. Drought exposure is measured using SPEI-03 averaged over alfalfa land within each state for April–September, generated through an ArcPy spatial-processing workflow. HAY & HAYLAGE irrigation variables are retained separately as contextual irrigation measures and are not used to overwrite hay-only alfalfa production variables.

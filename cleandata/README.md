@@ -115,8 +115,6 @@ If the state-panel value is missing or zero, fill from the county-state value on
 Exception: county-state `irr_share = 0` is allowed because a zero irrigation share can be meaningful.
 ```
 
-In other words:
-
 ```text
 state_panel valid value > county_state_panel nonzero value > NA
 ```

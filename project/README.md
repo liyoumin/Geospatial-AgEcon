@@ -18,7 +18,7 @@ The scripts support a geospatial agricultural economics workflow that links alfa
 
 ---
 
-## Recommended File Structure
+## File Structure
 
 ```text
 Geospatial-AgEcon/
@@ -42,7 +42,6 @@ Geospatial-AgEcon/
 ---
 
 ## Script Overview
-
 ### 1. `empirical.R`
 
 **Purpose:** Main econometric analysis script.
@@ -72,23 +71,6 @@ NA use value from last year
 - Fits a spatial generalized additive model using longitude and latitude smooth terms.
 - Compares alfalfa yield across irrigation methods using ANOVA and Tukey HSD tests.
 - Computes water-use efficiency by irrigation system.
-
-**Key packages:**
-
-```r
-fixest
-lmtest
-sandwich
-modelsummary
-readr
-dplyr
-tidyr
-mgcv
-sf
-USAboundaries
-agricolae
-ggplot2
-```
 
 **inputs:**
 
@@ -189,24 +171,6 @@ This script generates scatter plots and maps for changes in SPEI, export value, 
   - average export rate
   - alfalfa production change
 - Uses `tmap` and `ggplot2` for map production.
-
-**Key packages:**
-
-```r
-sf
-tmap
-tmaptools
-grid
-terra
-rmapshaper
-ggplot2
-dplyr
-tidyr
-ggrepel
-readr
-viridis
-tigris
-```
 
 **inputs:**
 

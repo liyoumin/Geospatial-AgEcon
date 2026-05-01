@@ -9,6 +9,7 @@ library(tigris)
 options(tigris_use_cache = TRUE)
 
 # 1) Read NOAA SPEI-3 NetCDF
+spei1 <- rast("/Users/macpro/Desktop/Youmin-phd/EIAP/Dataset/nclimgrid-spei-pearson-01.nc")
 spei <- rast("/Users/macpro/Desktop/Youmin-phd/EIAP/Dataset/nclimgrid-spei-pearson-03.nc")
 spei6 <- rast("/Users/macpro/Desktop/Youmin-phd/EIAP/Dataset/nclimgrid-spei-pearson-06.nc")
 # Inspect layer names

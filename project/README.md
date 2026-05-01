@@ -84,7 +84,7 @@ NA use value from last year
   - `midwest`, `west`
   - irrigation-method variables such as pressure and gravity irrigation yield/water use
 
-**Expected outputs:**
+**outputs:**
 
 - Updated `df.csv` with `irr_share` and `irrigation_dummy`.
 - Regression output in the R console.
@@ -103,7 +103,7 @@ This script evaluates spatial patterns in SPEI, alfalfa export value, and relate
 **Main tasks:**
 
 - Loads U.S. state boundaries using `tigris`.
-- Excludes non-CONUS regions such as Alaska, Hawaii, Puerto Rico, and territories where needed.
+- Excludes non-CONUS regions such as Alaska, Hawaii, Puerto Rico, and oversea territories.
 - Joins state polygons with the alfalfa panel.
 - Converts state polygons to centroids for spatial diagnostics.
 - Computes empirical variograms for:
